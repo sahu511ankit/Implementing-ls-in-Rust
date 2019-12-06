@@ -1,3 +1,51 @@
+ macro_rules! DIRED_PUTCHAR {
+   ($c:expr) =>{
+     extern "C" putchar((c));
+     dired_pos +=1;
+     };
+   }
+ fn print_current_files() {
+  let i : isize=50 ;
+   match format {
+     one_per_line =>{
+       while(i < cwd_n_used){
+         print_file_name_and_frills (sorted_file[i],0);
+         println!();
+         i+=1;
+       }
+     },
+     many_per_line => {
+       if(! line_length){
+        print_with_seperator(" "); }
+        else {
+          print_many_per_line();
+        }
+     },
+    horizontal => {
+      if (!line_length){
+        print_with_seperator(" ");
+      }
+      else {
+        print_horizontal();
+
+      }
+    },
+    with_commas =>{
+      print_with_seperator(",");
+    },
+
+    long_format => {
+      while(i<cwd_n_used){
+        set_normal_color();
+        print_long_format (sorted_files[i]);
+        DIRED_PUTCHAR!("\n");
+        i+=1;
+
+      }
+    },
+    
+   }
+}
 use std::io;
 fn process_signals(){
 	while interrupt_signal || stop_signal_count {
