@@ -143,6 +143,14 @@ SIGXFSZ];
 		}
 	}
 }
+fn signal_init(){
+  signal_setup (true);
+}
+
+fn signal_restore (void)
+{
+  signal_setup (false);
+}
 
 fn display_items(items: &Vec<PathBuf>, strip: Option<&Path>, options: &getopts::Matches) {
     if options.opt_present("long") || options.opt_present("numeric-uid-gid") {
