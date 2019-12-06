@@ -146,6 +146,41 @@ SIGXFSZ];
 fn signal_init(){
   signal_setup (true);
 }
+	fn display_date(metadata: &Metadata, options: &getopts::Matches) -> String {
+    if let Ok(mtime) = metadata.modified() {
+        let time = time::at(Timespec::new(
+            mtime
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_secs() as i64,
+            0,
+        ));
+        strftime("%F %R", &time).unwrap()
+    } else {
+        "???".to_string()
+    }
+}
+
+fn display_file_size(metadata: &Metadata, options: &getopts::Matches) -> String {
+    if options.opt_present("human-readable") {
+        match decimal_prefix(metadata.len() as f64) {
+            Standalone(bytes) => bytes.to_string(),
+            Prefixed(prefix, bytes) => format!("{:.2}{}", bytes, prefix).to_uppercase()
+        }
+    } else {
+        metadata.len().to_string()
+    }
+}
+
+fn display_file_type(file_type: FileType) -> String {
+    if file_type.is_dir() {
+        "d".to_string()
+    } else if file_type.is_symlink() {
+        "l".to_string()
+    } else {
+        "-".to_string()
+    }
+}
 
 fn signal_restore (void)
 {
