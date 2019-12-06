@@ -38,6 +38,7 @@ fn process_signals(){
 	}
 }
 
+
 fn signal_setup(init: bool){
 	 // the signals that are trapped, and the number of such signals
 
@@ -141,4 +142,59 @@ SIGXFSZ];
 			j=j+1;
 		}
 	}
+}
+
+fn display_items(items: &Vec<PathBuf>, strip: Option<&Path>, options: &getopts::Matches) {
+    if options.opt_present("long") || options.opt_present("numeric-uid-gid") {
+        let (mut max_links, mut max_size) = (1, 1);
+        for item in items {
+            let (links, size) = display_dir_entry_size(item, options);
+            max_links = max(links, max_links);
+            max_size = max(size, max_size);
+        }
+        for item in items {
+            display_item_long(item, strip, max_links, max_size, options);
+        }
+    } else {
+        if !options.opt_present("1") {
+            let names = items
+                .iter()
+                .filter_map(|i| {
+                    let md = get_metadata(i, options);
+                    match md {
+                        Err(e) => {
+                            let filename = get_file_name(i, strip);
+                            show_error!("{}: {}", filename, e);
+                            None
+                        }
+                        Ok(md) => Some(display_file_name(&i, strip, &md, options)),
+                    }
+                });
+
+            if let Some(size) = termsize::get() {
+                let mut grid = Grid::new(GridOptions {
+                    filling: Filling::Spaces(2),
+                    direction: Direction::TopToBottom,
+                });
+
+                for name in names {
+                    grid.add(name);
+                }
+
+                if let Some(output) = grid.fit_into_width(size.cols as usize) {
+                    print!("{}", output);
+                    return;
+                }
+            }
+        }
+
+        // Couldn't display a grid, either because we don't know
+        // the terminal width or because fit_into_width failed
+        for i in items {
+            let md = get_metadata(i, options);
+            if let Ok(md) = md {
+                println!("{}", display_file_name(&i, strip, &md, options).contents);
+            }
+        }
+    }
 }
